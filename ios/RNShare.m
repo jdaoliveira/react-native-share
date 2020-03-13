@@ -163,15 +163,18 @@ RCT_EXPORT_METHOD(open:(NSDictionary *)options
         [items addObject:message];
     }
     BOOL saveToFiles = [RCTConvert BOOL:options[@"saveToFiles"]];
+    NSArray *fileNamesArray = options[@"filenames"];
     NSArray *urlsArray = options[@"urls"];
     for (int i=0; i<urlsArray.count; i++) {
         NSURL *URL = [RCTConvert NSURL:urlsArray[i]];
+        
         if (URL) {
             if ([URL.scheme.lowercaseString isEqualToString:@"data"]) {
                 NSError *error;
                 NSData *data = [NSData dataWithContentsOfURL:URL
                                                      options:(NSDataReadingOptions)0
                                                        error:&error];
+                
                 if (!data) {
                     failureCallback(error);
                     return;
@@ -182,7 +185,10 @@ RCT_EXPORT_METHOD(open:(NSDictionary *)options
                         [items addObject: filePath];
                     }
                 } else {
-                    [items addObject:data];
+                    NSURL *url = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingString:fileNamesArray[i]]];
+                    [data writeToURL:url atomically:NO];
+                    
+                    [items addObject:url];
                 }
             } else {
                 [items addObject:URL];
